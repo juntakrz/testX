@@ -16,6 +16,7 @@ void processArgs(int argc, wchar_t* argv[]) {
   CFileWorks fExec(argList[0], CHECK_IF_EXE);
   CBufferProc bExec(&fExec);
   bExec.parseExecHeader();
+  bExec.parseImportDesc();
   bExec.showParsedData();
   //CFileWorks fIcon(argList[2], CHECK_IF_ICO);
 };

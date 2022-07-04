@@ -12,6 +12,7 @@ class CBufferProc {
   PIMAGE_IMPORT_DESCRIPTOR m_pIID = nullptr;
 
   std::vector<std::string> m_usedLibs;
+  std::vector<std::string> m_usedFuncs;
 
  public:
   CBufferProc(BYTE* pBuffer, DWORD size) noexcept;
@@ -24,7 +25,7 @@ class CBufferProc {
   void setType(bufType type);
 
   void parseExecHeader() noexcept;
-  const PIMAGE_DOS_HEADER DOSHdr() const noexcept;
+  void parseImportDesc() noexcept;
 
   void showParsedData() noexcept;
 };

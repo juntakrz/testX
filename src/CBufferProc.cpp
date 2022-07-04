@@ -83,13 +83,30 @@ void CBufferProc::parseExecHeader() noexcept {
   return;
 }
 
-const PIMAGE_DOS_HEADER CBufferProc::DOSHdr() const noexcept {
-  if (m_pIDH) {
-    return m_pIDH;
-  }
+void CBufferProc::parseImportDesc() noexcept {
+  PIMAGE_IMPORT_DESCRIPTOR pIID = m_pIID;
+  PIMAGE_NT_HEADERS pINH = m_pINH;
+  PBYTE pBaseAddr = (PBYTE)m_pIDH;
+  
+  PIMAGE_THUNK_DATA pThunkILT = nullptr;
+  PIMAGE_THUNK_DATA pThunkIAT = nullptr;
+  PIMAGE_IMPORT_BY_NAME pIBName = nullptr;
+  
+  // pIID++
+  // iterate through pIIDs to get functions for all libraries
+  
+  pThunkILT = (PIMAGE_THUNK_DATA)((PBYTE)pBaseAddr + util::RVAToOffset(pINH, pIID->OriginalFirstThunk));
+  pThunkIAT = (PIMAGE_THUNK_DATA)((PBYTE)pBaseAddr + util::RVAToOffset(pINH, pIID->FirstThunk));
 
-  std::cout << "WARNING: DOS header data not found.\n";
-  return nullptr;
+  while (pThunkILT->u1.AddressOfData != 0) {
+    if (!(pThunkILT->u1.Ordinal & IMAGE_ORDINAL_FLAG)) {
+      pIBName = (PIMAGE_IMPORT_BY_NAME)((PBYTE)pBaseAddr +
+                                        util::RVAToOffset(
+                                            pINH, pThunkILT->u1.AddressOfData));
+      m_usedFuncs.emplace_back(pIBName->Name);
+    }
+    pThunkILT++;
+  }
 }
 
 void CBufferProc::showParsedData() noexcept {
@@ -106,5 +123,13 @@ void CBufferProc::showParsedData() noexcept {
     }
 
     std::cout << "\nPossible WinAPI libraries found: " << wNamed << "\n";
+
+    index = 0;
+    std::cout << "\nFunctions used:\n\n";
+
+    for (const auto& it : m_usedFuncs) {
+      std::cout << index << ".\t" << it.c_str() << "\n";
+      index++;
+    }
   }
 }
