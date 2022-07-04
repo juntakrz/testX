@@ -15,7 +15,8 @@ void processArgs(int argc, wchar_t* argv[]) {
 
   CFileWorks fExec(argList[0], CHECK_IF_EXE);
   CBufferProc bExec(&fExec);
-  bExec.procHeader();
+  bExec.parseExecHeader();
+  bExec.showParsedData();
   //CFileWorks fIcon(argList[2], CHECK_IF_ICO);
 };
 
@@ -25,7 +26,6 @@ int wmain(int argc, wchar_t* argv[]) {
     util::printHelp();
   }
   else {
-
 	processArgs(argc, argv);
   }
 

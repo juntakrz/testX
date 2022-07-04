@@ -9,7 +9,9 @@ class CBufferProc {
 
   PIMAGE_DOS_HEADER m_pIDH = nullptr;
   PIMAGE_NT_HEADERS m_pINH = nullptr;
-  std::vector<PIMAGE_IMPORT_DESCRIPTOR> m_pIIDs;
+  PIMAGE_IMPORT_DESCRIPTOR m_pIID = nullptr;
+
+  std::vector<std::string> m_usedLibs;
 
  public:
   CBufferProc(BYTE* pBuffer, DWORD size) noexcept;
@@ -21,6 +23,8 @@ class CBufferProc {
 
   void setType(bufType type);
 
-  void procHeader() noexcept;
+  void parseExecHeader() noexcept;
   const PIMAGE_DOS_HEADER DOSHdr() const noexcept;
+
+  void showParsedData() noexcept;
 };
