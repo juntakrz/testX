@@ -132,7 +132,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\fileworks.cpp">
+    <ClCompile Include="src\CFileWorks.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\CBufferProc.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
@@ -150,8 +154,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\def.h" />
-    <ClInclude Include="src\fileworks.h" />
+    <ClInclude Include="src\define.h" />
+    <ClInclude Include="src\CFileWorks.h" />
+    <ClInclude Include="src\CBufferProc.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\util.h" />
   </ItemGroup>

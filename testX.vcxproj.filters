@@ -21,10 +21,13 @@
     <ClCompile Include="src\pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\fileworks.cpp">
+    <ClCompile Include="src\CFileWorks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CBufferProc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,13 +35,16 @@
     <ClInclude Include="src\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\fileworks.h">
+    <ClInclude Include="src\CFileWorks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\def.h">
+    <ClInclude Include="src\define.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CBufferProc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

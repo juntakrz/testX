@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "util.h"
-#include "fileworks.h"
-#include "def.h"
+#include "CFileWorks.h"
+#include "CBufferProc.h"
+#include "define.h"
 
 void processArgs(int argc, wchar_t* argv[]) {
 
@@ -12,7 +13,10 @@ void processArgs(int argc, wchar_t* argv[]) {
 	argList.emplace_back(argv[i]);
   }
 
-  FileWorks fw1(argList[0], CHECK_IF_EXE);
+  CFileWorks fExec(argList[0], CHECK_IF_EXE);
+  CBufferProc bExec(&fExec);
+  bExec.procDOSHdr();
+  //CFileWorks fIcon(argList[2], CHECK_IF_ICO);
 };
 
 int wmain(int argc, wchar_t* argv[]) {

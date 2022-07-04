@@ -1,18 +1,18 @@
 #include "pch.h"
-#include "fileworks.h"
+#include "CFileWorks.h"
 
-FileWorks::FileWorks(const std::wstring& path, DWORD flags) noexcept
+CFileWorks::CFileWorks(const std::wstring& path, DWORD flags) noexcept
     : m_filePath(path), m_flags(flags) {
-  FileWorks::openFile(m_filePath, m_flags);
+  CFileWorks::openFile(m_filePath, m_flags);
 }
 
-FileWorks::~FileWorks() noexcept {
+CFileWorks::~CFileWorks() noexcept {
   if (m_pBuffer) {
     m_pBuffer.release();
   }
 }
 
-void FileWorks::openFile(const std::wstring& path, DWORD flags) noexcept {
+void CFileWorks::openFile(const std::wstring& path, DWORD flags) noexcept {
   DWORD lastError = 0;
 
   m_hFile = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0,
@@ -43,14 +43,18 @@ void FileWorks::openFile(const std::wstring& path, DWORD flags) noexcept {
 
   // basic format checking
   if (m_flags) {
-    if (util::checkFlag(m_flags, 0)) {
+    if (util::checkFlag(m_flags, (uint8_t)bufType::exec - 1)) {
+      // Mark Zbikowski and minimum possible PE size check
       if (m_pBuffer[0] != 'M' && m_pBuffer[1] != 'Z' || m_bufferSize < 97) {
         std::cout << "ERROR: this does not seem to be a Windows executable.\n";
         exit(404);
+      } else {
+        m_type = bufType::exec;
       }
     }
-    if (util::checkFlag(m_flags, 1)) {
+    if (util::checkFlag(m_flags, (uint8_t)bufType::icon - 1)) {
       std::cout << "check if icon\n";
+      m_type = bufType::icon;
     }
   }
 
@@ -59,11 +63,13 @@ void FileWorks::openFile(const std::wstring& path, DWORD flags) noexcept {
                    "', size: " << (uint32_t)m_bufferSize << " bytes.\n";
 }
 
-void FileWorks::getBuffer(BYTE* out_pBuffer, DWORD& out_bufferSize) noexcept {
+void CFileWorks::getBuffer(BYTE* out_pBuffer, DWORD& out_bufferSize) noexcept {
   out_pBuffer = m_pBuffer.get();
   out_bufferSize = m_bufferSize;
 }
 
-BYTE* FileWorks::getBuffer() noexcept { return m_pBuffer.get(); }
+BYTE* CFileWorks::getBuffer() noexcept { return m_pBuffer.get(); }
 
-DWORD FileWorks::getBufferSize() noexcept { return m_bufferSize; }
+DWORD CFileWorks::getBufferSize() noexcept { return m_bufferSize; }
+
+bufType CFileWorks::getBufferType() noexcept { return m_type; }
