@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "util.h"
 #include "fileworks.h"
+#include "def.h"
 
 void processArgs(int argc, wchar_t* argv[]) {
 
@@ -11,13 +12,13 @@ void processArgs(int argc, wchar_t* argv[]) {
 	argList.emplace_back(argv[i]);
   }
 
-  FileWorks fw1(argList[0]);
+  FileWorks fw1(argList[0], CHECK_IF_EXE);
 };
 
 int wmain(int argc, wchar_t* argv[]) {
 
   if (argc < 4 || argc > 4) {
-    Util::showUsage();
+    util::printHelp();
   }
   else {
 

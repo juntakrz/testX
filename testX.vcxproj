@@ -150,6 +150,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\def.h" />
     <ClInclude Include="src\fileworks.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\util.h" />
