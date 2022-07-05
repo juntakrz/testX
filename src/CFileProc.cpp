@@ -92,6 +92,23 @@ void CFileProc::openFile(const std::wstring& path) noexcept {
                    "', size: " << (uint32_t)m_bufferSize << " bytes.");
 }
 
+DWORD CFileProc::saveFile(const std::wstring& path) noexcept {
+  
+  DWORD bytesOut = 0;
+
+  HANDLE hFile = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE,
+                             0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+
+  if (!WriteFile(hFile, m_pBuffer.get(), m_bufferSize, &bytesOut, 0)) {
+    wLOG(L"ERROR: couldn't create file using provided path: " << path);
+    exit(404);
+  };
+
+  CloseHandle(hFile);
+
+  wLOG(L"Created file at " << path << ", " << bytesOut << " bytes written.");
+}
+
 void CFileProc::getBuffer(BYTE* out_pBuffer, DWORD& out_bufferSize) noexcept {
   out_pBuffer = m_pBuffer.get();
   out_bufferSize = m_bufferSize;

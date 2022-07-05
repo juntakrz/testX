@@ -6,7 +6,9 @@ namespace util {
 void printHelp() noexcept {
   LOG("\nUSAGE: testX [path_to_executable]");
   LOG("Flags:\n  -i [path_to_icon]\t.ico file to replace original icon with");
+  LOG("  -o [output_filename]\toutput .exe file, will write to the same executable if not defined");
   LOG("  -s\t\t\tshort report");
+  LOG("\nEXAMPLE: testX test.exe -o test_copy.exe -i icon1.ico");
 }
 
 DWORD RVAToOffset(PIMAGE_NT_HEADERS pNTHdr, DWORD RVA) noexcept {

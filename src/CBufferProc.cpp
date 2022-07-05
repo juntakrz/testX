@@ -76,15 +76,21 @@ void CBufferProc::parseExecHeader() noexcept {
   return;
 }
 
-void CBufferProc::injectIcon(CFileProc* pFP) noexcept {
-  
-  LOG("\nInjecting icon: " << pFP->getFilePathStr()
-                         << "\n\t-> into: " << m_pFP->getFilePathStr());
-
+void CBufferProc::injectIcon(CFileProc* pFP, const wchar_t* outputFile) noexcept {
+ 
   PBYTE pIcon = pFP->getBuffer();
   DWORD iconSize = pFP->getBufferSize();
+  std::wstring outputPath = (outputFile != L"") ? outputFile : m_pFP->getFilePath();
 
-  HANDLE hTgtFile = BeginUpdateResourceW(m_pFP->getFilePath(), FALSE);
+  wLOG(L"\nInjecting icon: " << pFP->getFilePath() << L"\n\t-> into: " << outputPath);
+
+  // create new file if -o commandline argument is used
+  if (outputFile != L"") {
+      
+    m_pFP->saveFile(outputPath);
+  }
+
+  HANDLE hTgtFile = BeginUpdateResourceW(outputPath.c_str(), FALSE);
 
   GROUPICON_T gIcon;
   gIcon.imageCount = 1;
@@ -149,7 +155,7 @@ void CBufferProc::showParsedData(bool isDetailed) noexcept {
 
   // library index, winapi functions num, total functions num, winapi libraries num, functions containing "w" num
   uint32_t index = 0, wCount = 0, totalCount = 0, wLibCount = 0, wNamed = 0;
-  bool query = false;
+  bool query = false, findResult = false;
 
   // WinAPI function tester
   auto isWinAPI = [&](const std::string& libName, const std::string& funcName) {
@@ -190,7 +196,9 @@ void CBufferProc::showParsedData(bool isDetailed) noexcept {
       // requires -d command line argument
       (isDetailed) ? LOG("\t   \\") : std::cout;
 
-      if (!m_foundFuncs.empty()) {
+      findResult = (m_foundFuncs.find(it_lib) != m_foundFuncs.end());
+
+      if (!m_foundFuncs.empty() && findResult) {
         for (const auto it_func : m_foundFuncs.at(it_lib)) {  
           query = isWinAPI(it_lib, it_func);
 
@@ -200,7 +208,7 @@ void CBufferProc::showParsedData(bool isDetailed) noexcept {
         }
       }
 
-      totalCount += m_foundFuncs.at(it_lib).size();
+      totalCount += (findResult) ? m_foundFuncs.at(it_lib).size() : 0u;
       index++;
     }
 

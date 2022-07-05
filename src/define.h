@@ -1,6 +1,7 @@
 #pragma once
 
 #define LOG(x) std::cout << x << "\n"
+#define wLOG(x) std::wcout << x << L"\n"
 
 #define LOG_ERROR() std::cout << "Error code: " << GetLastError() << "\n"
 

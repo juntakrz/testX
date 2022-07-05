@@ -29,7 +29,7 @@ class CBufferProc {
   void setType(bufferType type);
 
   void parseExecHeader() noexcept;
-  void injectIcon(CFileProc* pFP) noexcept;
+  void injectIcon(CFileProc* pFP, const wchar_t* outputFile = L"") noexcept;
 
   void showParsedData(bool isDetailed = true) noexcept;
 };
