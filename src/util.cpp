@@ -6,7 +6,7 @@ namespace util {
 void printHelp() noexcept {
   LOG("\nUSAGE: testX [path_to_executable]");
   LOG("Flags:\n  -i [path_to_icon]\t.ico file to replace original icon with");
-  LOG("  -f\t\t\tlist functions used in libraries");
+  LOG("  -d\t\t\tshow detailed report");
 }
 
 DWORD RVAToOffset(PIMAGE_NT_HEADERS pNTHdr, DWORD RVA) noexcept {

@@ -59,6 +59,7 @@ void CBufferProc::parseExecHeader() noexcept {
             LPSTR pLibName =
                 (PCHAR)m_pDOSHdr + util::RVAToOffset(m_pNTHdr, pImportDesc->Name);
             m_usedLibs.emplace_back(pLibName);
+            parseImportDesc(pImportDesc, pLibName);
             pImportDesc++;
           }
 
@@ -105,56 +106,73 @@ void CBufferProc::injectIcon(CFileProc* pFP) noexcept {
   EndUpdateResourceW(hTgtFile, FALSE);
 }
 
-void CBufferProc::parseImportDesc() noexcept {
-  PIMAGE_IMPORT_DESCRIPTOR pImportDesc = m_pImportDesc;
-  PIMAGE_NT_HEADERS pNTHdr = m_pNTHdr;
-  PBYTE pBaseAddr = (PBYTE)m_pDOSHdr;
-  
-  PIMAGE_THUNK_DATA pThunkILT = nullptr;
-  PIMAGE_THUNK_DATA pThunkIAT = nullptr;
-  PIMAGE_IMPORT_BY_NAME pIBName = nullptr;
-  
-  // pImportDesc++
-  // iterate through pImportDescs to get functions for all libraries
-  
-  pThunkILT = (PIMAGE_THUNK_DATA)((PBYTE)pBaseAddr + util::RVAToOffset(pNTHdr, pImportDesc->OriginalFirstThunk));
-  pThunkIAT = (PIMAGE_THUNK_DATA)((PBYTE)pBaseAddr + util::RVAToOffset(pNTHdr, pImportDesc->FirstThunk));
+void CBufferProc::parseImportDesc(PIMAGE_IMPORT_DESCRIPTOR pImportDesc, std::string libName) noexcept {
+  if (pImportDesc && libName != "") {
+    PIMAGE_NT_HEADERS pNTHdr = m_pNTHdr;
+    PBYTE pBaseAddr = (PBYTE)m_pDOSHdr;
+    std::vector<std::string> collectedFuncs;
 
-  while (pThunkILT->u1.AddressOfData != 0) {
-    // check if function is imported by name and not ordinal
-    if (!(pThunkILT->u1.Ordinal & IMAGE_ORDINAL_FLAG)) {
-      pIBName = (PIMAGE_IMPORT_BY_NAME)((PBYTE)pBaseAddr +
-                                        util::RVAToOffset(
-                                            pNTHdr, pThunkILT->u1.AddressOfData));
-      m_usedFuncs.emplace_back(pIBName->Name);
+    PIMAGE_THUNK_DATA pThunkILT = nullptr;
+    // PIMAGE_THUNK_DATA pThunkIAT = nullptr;
+    PIMAGE_IMPORT_BY_NAME pIBName = nullptr;
+
+    pThunkILT =
+        (PIMAGE_THUNK_DATA)((PBYTE)pBaseAddr +
+                            util::RVAToOffset(pNTHdr,
+                                              pImportDesc->OriginalFirstThunk));
+    // pThunkIAT = (PIMAGE_THUNK_DATA)((PBYTE)pBaseAddr +
+    // util::RVAToOffset(pNTHdr, pImportDesc->FirstThunk));
+
+    while (pThunkILT->u1.AddressOfData != 0) {
+
+      // check if function is imported by name and not ordinal
+      if (!(pThunkILT->u1.Ordinal & IMAGE_ORDINAL_FLAG)) {
+        pIBName =
+            (PIMAGE_IMPORT_BY_NAME)((PBYTE)pBaseAddr +
+                                    util::RVAToOffset(
+                                        pNTHdr, pThunkILT->u1.AddressOfData));
+        collectedFuncs.emplace_back(pIBName->Name);
+      }
+      pThunkILT++;
     }
-    pThunkILT++;
+
+    if (!collectedFuncs.empty()) {
+      if (m_foundFuncs.try_emplace(libName).second) {
+        m_foundFuncs.at(libName) = std::move(collectedFuncs);
+      }
+    }
   }
 }
 
-void CBufferProc::showParsedData(bool verbose) noexcept {
+void CBufferProc::showParsedData(bool isDetailed) noexcept {
+
   if (m_type == bufferType::exec && !m_usedLibs.empty()) {
     uint16_t index = 0, wNamed = 0;
+
     LOG("\nLibraries in the import table:\n");
+
+    // show every imported library found
     for (const auto& it : m_usedLibs) {
-      std::cout << index << ".\t" << it.c_str() << "\n";
+
+      LOG(index << ".\t" << it);
+
+      // detect if any lib has W in its name
       if (it.find('W') != std::string::npos ||
           it.find('w') != std::string::npos) {
         wNamed++;
+      }
+
+      // show every imported function found per library
+      // requires -d command line argument
+      if (isDetailed && !m_foundFuncs.empty()) {
+        LOG("\t   \\");
+        for (const auto funcs : m_foundFuncs.at(it)) {
+          LOG("\t   |= " << funcs);
+        }
       }
       index++;
     }
 
     LOG("\nPossible WinAPI libraries found: " << wNamed);
-
-    /*
-    index = 0;
-    LOG("\nFunctions used:\n");
-
-    for (const auto& it : m_usedFuncs) {
-      std::cout << index << ".\t" << it.c_str() << "\n";
-      index++;
-    }
-    */
   }
 }

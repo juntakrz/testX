@@ -7,26 +7,38 @@
 void processArgs(int argc, wchar_t* argv[]) {
 
   std::vector<std::wstring> argList;
+  std::wstring iconPath = L"";
+  bool isDetailed = false;
 
   for (int i = 1; i < argc; i++) {
 
 	argList.emplace_back(argv[i]);
   }
 
+  // basic argument parser
+  for (uint8_t args = 1; args < argList.size(); args++) {
+    if (argList[args] == L"-i" && argList.size() > args) {
+      iconPath = argList[args + 1];
+      args++; // skip next argument
+    }
+    if (argList[args] == L"-d") {
+      isDetailed = true;
+    }
+  }
+
   CFileProc fExec(argList[0]);
-  CFileProc fIcon(argList[2]);
   CBufferProc bExec(&fExec);
+  if (iconPath != L"") {
+    CFileProc fIcon(iconPath);
+    bExec.injectIcon(&fIcon);
+  }
   bExec.parseExecHeader();
-  bExec.parseImportDesc();
-  bExec.showParsedData();
-  bExec.injectIcon(&fIcon);
+  bExec.showParsedData(isDetailed);
 };
 
 int wmain(int argc, wchar_t* argv[]) {
-  
-  LOG("GO!");
 
-  if (argc < 4 || argc > 4) {
+  if (argc < 2) {
     util::printHelp();
   }
   else {

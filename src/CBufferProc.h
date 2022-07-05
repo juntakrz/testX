@@ -12,7 +12,11 @@ class CBufferProc {
   PIMAGE_IMPORT_DESCRIPTOR m_pImportDesc = nullptr;
 
   std::vector<std::string> m_usedLibs;
-  std::vector<std::string> m_usedFuncs;
+  std::map<std::string, std::vector<std::string>> m_foundFuncs;
+
+ private:
+  void parseImportDesc(PIMAGE_IMPORT_DESCRIPTOR pImpDesc = nullptr,
+                       std::string libName = "") noexcept;
 
  public:
   CBufferProc(BYTE* pBuffer, DWORD size) noexcept;
@@ -26,7 +30,6 @@ class CBufferProc {
 
   void parseExecHeader() noexcept;
   void injectIcon(CFileProc* pFP) noexcept;
-  void parseImportDesc() noexcept;
 
-  void showParsedData(bool verbose = false) noexcept;
+  void showParsedData(bool isDetailed = false) noexcept;
 };
