@@ -1,18 +1,18 @@
 #include "pch.h"
-#include "CFileWorks.h"
+#include "CFileProc.h"
 
-CFileWorks::CFileWorks(const std::wstring& path) noexcept
+CFileProc::CFileProc(const std::wstring& path) noexcept
     : m_filePath(path) {
-  CFileWorks::openFile(m_filePath);
+  CFileProc::openFile(m_filePath);
 }
 
-CFileWorks::~CFileWorks() noexcept {
+CFileProc::~CFileProc() noexcept {
   if (m_pBuffer) {
     m_pBuffer.release();
   }
 }
 
-void CFileWorks::openFile(const std::wstring& path) noexcept {
+void CFileProc::openFile(const std::wstring& path) noexcept {
   DWORD lastError = 0;
 
   m_hFile = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0,
@@ -59,18 +59,26 @@ void CFileWorks::openFile(const std::wstring& path) noexcept {
     }
   }
 
-  LOG("\nSuccessfuly read '" <<
+  LOG("Successfuly read '" <<
                    std::string(m_filePath.begin(), m_filePath.end()) <<
                    "', size: " << (uint32_t)m_bufferSize << " bytes.");
 }
 
-void CFileWorks::getBuffer(BYTE* out_pBuffer, DWORD& out_bufferSize) noexcept {
+void CFileProc::getBuffer(BYTE* out_pBuffer, DWORD& out_bufferSize) noexcept {
   out_pBuffer = m_pBuffer.get();
   out_bufferSize = m_bufferSize;
 }
 
-BYTE* CFileWorks::getBuffer() noexcept { return m_pBuffer.get(); }
+BYTE* CFileProc::getBuffer() noexcept { return m_pBuffer.get(); }
 
-DWORD CFileWorks::getBufferSize() noexcept { return m_bufferSize; }
+DWORD CFileProc::getBufferSize() noexcept { return m_bufferSize; }
 
-bufferType CFileWorks::getBufferType() noexcept { return m_type; }
+bufferType CFileProc::getBufferType() noexcept { return m_type; }
+
+const wchar_t* CFileProc::getFilePath() const noexcept {
+  return m_filePath.c_str();
+}
+
+std::string CFileProc::getFilePathStr() const noexcept {
+  return std::string(m_filePath.begin(), m_filePath.end());
+}

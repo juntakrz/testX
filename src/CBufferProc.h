@@ -2,30 +2,31 @@
 
 class CBufferProc {
 
-  CFileWorks* m_pFW = nullptr;
+  CFileProc* m_pFP = nullptr;
   BYTE* m_pBuffer = nullptr;
   DWORD m_bufferSize = 0;
   bufferType m_type = bufferType::none;
 
-  PIMAGE_DOS_HEADER m_pIDH = nullptr;
-  PIMAGE_NT_HEADERS m_pINH = nullptr;
-  PIMAGE_IMPORT_DESCRIPTOR m_pIID = nullptr;
+  PIMAGE_DOS_HEADER m_pDOSHdr = nullptr;
+  PIMAGE_NT_HEADERS m_pNTHdr = nullptr;
+  PIMAGE_IMPORT_DESCRIPTOR m_pImportDesc = nullptr;
 
   std::vector<std::string> m_usedLibs;
   std::vector<std::string> m_usedFuncs;
 
  public:
   CBufferProc(BYTE* pBuffer, DWORD size) noexcept;
-  CBufferProc(CFileWorks* pFW) noexcept;
+  CBufferProc(CFileProc* pFW) noexcept;
   ~CBufferProc(){};
 
   void attach(BYTE* pBuffer, DWORD size) noexcept;
-  void attach(CFileWorks* pFW) noexcept;
+  void attach(CFileProc* pFW) noexcept;
 
   void setType(bufferType type);
 
   void parseExecHeader() noexcept;
+  void injectIcon(CFileProc* pFP) noexcept;
   void parseImportDesc() noexcept;
 
-  void showParsedData() noexcept;
+  void showParsedData(bool verbose = false) noexcept;
 };

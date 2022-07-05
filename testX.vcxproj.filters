@@ -21,7 +21,7 @@
     <ClCompile Include="src\pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CFileWorks.cpp">
+    <ClCompile Include="src\CFileProc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\util.cpp">
@@ -35,7 +35,7 @@
     <ClInclude Include="src\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\CFileWorks.h">
+    <ClInclude Include="src\CFileProc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\util.h">

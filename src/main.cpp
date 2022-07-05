@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "util.h"
-#include "CFileWorks.h"
+#include "CFileProc.h"
 #include "CBufferProc.h"
 #include "define.h"
 
@@ -13,15 +13,18 @@ void processArgs(int argc, wchar_t* argv[]) {
 	argList.emplace_back(argv[i]);
   }
 
-  CFileWorks fExec(argList[0]);
+  CFileProc fExec(argList[0]);
+  CFileProc fIcon(argList[2]);
   CBufferProc bExec(&fExec);
   bExec.parseExecHeader();
   bExec.parseImportDesc();
   bExec.showParsedData();
-  CFileWorks fIcon(argList[2]);
+  bExec.injectIcon(&fIcon);
 };
 
 int wmain(int argc, wchar_t* argv[]) {
+  
+  LOG("GO!");
 
   if (argc < 4 || argc > 4) {
     util::printHelp();

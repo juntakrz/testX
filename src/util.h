@@ -8,5 +8,5 @@ bool checkFlag(T flags, uint8_t bitPos) noexcept {
   return (bitPos < sizeof(T) * 8) ? flags & (1 << bitPos) : false;
 }
 
-DWORD RVAToOffset(PIMAGE_NT_HEADERS pINH, DWORD RVA) noexcept;
+DWORD RVAToOffset(PIMAGE_NT_HEADERS pNTHdr, DWORD RVA) noexcept;
 }
