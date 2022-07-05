@@ -51,6 +51,34 @@ void CFileProc::openFile(const std::wstring& path) noexcept {
       PDWORD pIconSOF = (PDWORD)m_pBuffer.get();
       if (*pIconSOF == 0x00010000) {
         m_type = bufferType::icon;
+
+        // detect if it's a PNG-based or standard ICO file and calculate offset
+        PBYTE pScan = m_pBuffer.get();
+        PDWORD pCheck = nullptr;
+
+        for (DWORD s = 22; s < 255; s++) {
+          pScan = (PBYTE)pSOF + s;
+
+          if (*pScan == 0x89) {
+            pCheck = (PDWORD)pScan;
+            
+            // "PNG number", little endian
+            if (*pCheck == 0x474E5089) {
+              m_offset = s;
+              break;
+            };
+          }
+
+          if (*pScan == 0x28) {
+            pCheck = (PDWORD)pScan;
+
+            // "ICO number", little endian
+            if (*pCheck == 0x00000028) {
+              m_offset = s;
+              break;
+            }
+          }
+        }
       }
     }
 
@@ -74,6 +102,8 @@ BYTE* CFileProc::getBuffer() noexcept { return m_pBuffer.get(); }
 DWORD CFileProc::getBufferSize() noexcept { return m_bufferSize; }
 
 bufferType CFileProc::getBufferType() noexcept { return m_type; }
+
+DWORD CFileProc::getBufferOffset() noexcept { return m_offset; }
 
 const wchar_t* CFileProc::getFilePath() const noexcept {
   return m_filePath.c_str();

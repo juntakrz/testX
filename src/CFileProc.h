@@ -9,6 +9,7 @@ class CFileProc {
   std::wstring m_filePath = L"";
   DWORD m_fileSize = 0;
   DWORD m_bufferSize = 0;
+  DWORD m_offset = 0;
   std::unique_ptr<BYTE[]> m_pBuffer;
   bufferType m_type = bufferType::none;
 
@@ -23,6 +24,7 @@ public:
   BYTE* getBuffer() noexcept;
   DWORD getBufferSize() noexcept;
   bufferType getBufferType() noexcept;
+  DWORD getBufferOffset() noexcept;
   const wchar_t* getFilePath() const noexcept;
   std::string getFilePathStr() const noexcept;
 };

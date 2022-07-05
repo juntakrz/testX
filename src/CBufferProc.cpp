@@ -79,7 +79,7 @@ void CBufferProc::parseExecHeader() noexcept {
 void CBufferProc::injectIcon(CFileProc* pFP) noexcept {
   
   LOG("\nInjecting icon: " << pFP->getFilePathStr()
-                         << "\n\tinto: " << m_pFP->getFilePathStr());
+                         << "\n\t-> into: " << m_pFP->getFilePathStr());
 
   PBYTE pIcon = pFP->getBuffer();
   DWORD iconSize = pFP->getBufferSize();
@@ -97,11 +97,11 @@ void CBufferProc::injectIcon(CFileProc* pFP) noexcept {
 
   // inject icon with id 1
   UpdateResourceW(hTgtFile, RT_ICON, MAKEINTRESOURCEW(1), MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
-                  pIcon + 102,
-                  iconSize - 102);
+                  pIcon + pFP->getBufferOffset(),
+                  iconSize - pFP->getBufferOffset());
 
-  LOG("Icon was of PNG format, adjusted offset and injected " << iconSize - 102
-                                                              << " bytes.");
+  LOG("Applied icon data offset of " << pFP->getBufferOffset() << " bytes and injected "
+      << iconSize - pFP->getBufferOffset() << " bytes.");
 
   EndUpdateResourceW(hTgtFile, FALSE);
 }

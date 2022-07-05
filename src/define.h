@@ -4,7 +4,7 @@
 
 #define LOG_ERROR() std::cout << "Error code: " << GetLastError() << "\n"
 
-enum bufferType { none = 0, exec = 1, icon = 2};
+enum bufferType { none = 0, exec, icon };
 
 #pragma pack(push, 2)
 struct ICON_T {
