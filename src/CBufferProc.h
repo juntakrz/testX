@@ -20,7 +20,7 @@ class CBufferProc {
 
  public:
   CBufferProc(BYTE* pBuffer, DWORD size) noexcept;
-  CBufferProc(CFileProc* pFW) noexcept;
+  CBufferProc(CFileProc* pFP) noexcept;
   ~CBufferProc(){};
 
   void attach(BYTE* pBuffer, DWORD size) noexcept;
@@ -31,5 +31,5 @@ class CBufferProc {
   void parseExecHeader() noexcept;
   void injectIcon(CFileProc* pFP) noexcept;
 
-  void showParsedData(bool isDetailed = false) noexcept;
+  void showParsedData(bool isDetailed = true) noexcept;
 };

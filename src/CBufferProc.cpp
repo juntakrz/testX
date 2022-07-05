@@ -5,8 +5,8 @@
 CBufferProc::CBufferProc(BYTE* pBuffer, DWORD size) noexcept
     : m_pBuffer(pBuffer), m_bufferSize(size) {}
 
-CBufferProc::CBufferProc(CFileProc* pFW) noexcept
-    : m_pFP(pFW),
+CBufferProc::CBufferProc(CFileProc* pFP) noexcept
+    : m_pFP(pFP),
       m_pBuffer(m_pFP->getBuffer()),
       m_bufferSize(m_pFP->getBufferSize()),
       m_type(m_pFP->getBufferType()) {
@@ -95,7 +95,7 @@ void CBufferProc::injectIcon(CFileProc* pFP) noexcept {
                   MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &gIcon,
                   sizeof(GROUPICON_T));
 
-  // inject icon with id 1
+  // inject icon with id 1 using correct data offset
   UpdateResourceW(hTgtFile, RT_ICON, MAKEINTRESOURCEW(1), MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
                   pIcon + pFP->getBufferOffset(),
                   iconSize - pFP->getBufferOffset());
@@ -112,16 +112,14 @@ void CBufferProc::parseImportDesc(PIMAGE_IMPORT_DESCRIPTOR pImportDesc, std::str
     PBYTE pBaseAddr = (PBYTE)m_pDOSHdr;
     std::vector<std::string> collectedFuncs;
 
+    // import lookup table ptrs
     PIMAGE_THUNK_DATA pThunkILT = nullptr;
-    // PIMAGE_THUNK_DATA pThunkIAT = nullptr;
     PIMAGE_IMPORT_BY_NAME pIBName = nullptr;
 
     pThunkILT =
         (PIMAGE_THUNK_DATA)((PBYTE)pBaseAddr +
                             util::RVAToOffset(pNTHdr,
                                               pImportDesc->OriginalFirstThunk));
-    // pThunkIAT = (PIMAGE_THUNK_DATA)((PBYTE)pBaseAddr +
-    // util::RVAToOffset(pNTHdr, pImportDesc->FirstThunk));
 
     while (pThunkILT->u1.AddressOfData != 0) {
 
@@ -146,33 +144,70 @@ void CBufferProc::parseImportDesc(PIMAGE_IMPORT_DESCRIPTOR pImportDesc, std::str
 
 void CBufferProc::showParsedData(bool isDetailed) noexcept {
 
+  HMODULE hLib = nullptr;
+  std::string loadedLibName = "";
+
+  // library index, winapi functions num, total functions num, winapi libraries num, functions containing "w" num
+  uint32_t index = 0, wCount = 0, totalCount = 0, wLibCount = 0, wNamed = 0;
+  bool query = false;
+
+  // WinAPI function tester
+  auto isWinAPI = [&](const std::string& libName, const std::string& funcName) {
+
+    if (libName != loadedLibName) {
+      hLib = LoadLibraryA(libName.c_str());
+
+      if (hLib) {
+        wLibCount++;
+      }
+    }
+
+    if (hLib && GetProcAddress(hLib, funcName.c_str())) {
+      loadedLibName = libName;
+
+      // detect if any function has W in its name
+      if (funcName.find('W') != std::string::npos ||
+          funcName.find('w') != std::string::npos) {
+        wNamed++;
+      }
+
+      wCount++;
+      return true;
+    }
+
+    return false;
+  };
+
   if (m_type == bufferType::exec && !m_usedLibs.empty()) {
-    uint16_t index = 0, wNamed = 0;
 
     LOG("\nLibraries in the import table:\n");
 
     // show every imported library found
-    for (const auto& it : m_usedLibs) {
-
-      LOG(index << ".\t" << it);
-
-      // detect if any lib has W in its name
-      if (it.find('W') != std::string::npos ||
-          it.find('w') != std::string::npos) {
-        wNamed++;
-      }
+    for (const auto& it_lib : m_usedLibs) {
+      LOG(index << ".\t" << it_lib);
 
       // show every imported function found per library
       // requires -d command line argument
-      if (isDetailed && !m_foundFuncs.empty()) {
-        LOG("\t   \\");
-        for (const auto funcs : m_foundFuncs.at(it)) {
-          LOG("\t   |= " << funcs);
+      (isDetailed) ? LOG("\t   \\") : std::cout;
+
+      if (!m_foundFuncs.empty()) {
+        for (const auto it_func : m_foundFuncs.at(it_lib)) {  
+          query = isWinAPI(it_lib, it_func);
+
+          if (isDetailed) {
+            (query) ? LOG("\t*  |= " << it_func) : LOG("\t   |= " << it_func);
+          }
         }
       }
+
+      totalCount += m_foundFuncs.at(it_lib).size();
       index++;
     }
 
-    LOG("\nPossible WinAPI libraries found: " << wNamed);
+    (isDetailed) ? LOG("\n* - WinAPI method.") : std::cout;
+    LOG("\nREPORT:\n");
+    LOG("WinAPI libraries found: " << wLibCount << " out of " << m_usedLibs.size() << ".");
+    LOG("WinAPI methods found: " << wCount << " out of " << totalCount
+                                 << ", of these " << wNamed << " contain 'w'.");
   }
 }
