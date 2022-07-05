@@ -1,9 +1,12 @@
 #include "pch.h"
 #include "util.h"
+#include "define.h"
 
 namespace util {
 void printHelp() noexcept {
-std::cout << "\nUSAGE: testX [path_to_executable] -i [path_to_icon]\n";
+  LOG("\nUSAGE: testX [path_to_executable]");
+  LOG("Flags:\n  -i [path_to_icon]\t.ico file to replace original icon with");
+  LOG("  -f\t\t\tlist functions used in libraries");
 }
 
 DWORD RVAToOffset(PIMAGE_NT_HEADERS pINH, DWORD RVA) noexcept {

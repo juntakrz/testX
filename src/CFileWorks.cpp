@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "CFileWorks.h"
 
-CFileWorks::CFileWorks(const std::wstring& path, DWORD flags) noexcept
-    : m_filePath(path), m_flags(flags) {
-  CFileWorks::openFile(m_filePath, m_flags);
+CFileWorks::CFileWorks(const std::wstring& path) noexcept
+    : m_filePath(path) {
+  CFileWorks::openFile(m_filePath);
 }
 
 CFileWorks::~CFileWorks() noexcept {
@@ -12,7 +12,7 @@ CFileWorks::~CFileWorks() noexcept {
   }
 }
 
-void CFileWorks::openFile(const std::wstring& path, DWORD flags) noexcept {
+void CFileWorks::openFile(const std::wstring& path) noexcept {
   DWORD lastError = 0;
 
   m_hFile = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0,
@@ -20,7 +20,7 @@ void CFileWorks::openFile(const std::wstring& path, DWORD flags) noexcept {
 
   // check if file exists
   if (lastError = GetLastError() == ERROR_FILE_NOT_FOUND) {
-    std::cout << "ERROR: could not find the file specified.\n";
+    LOG("ERROR: could not find the file specified.");
     util::printHelp();
     exit(ERROR_FILE_NOT_FOUND);
   }
@@ -32,35 +32,36 @@ void CFileWorks::openFile(const std::wstring& path, DWORD flags) noexcept {
   m_pBuffer = std::make_unique<BYTE[]>(m_fileSize);
 
   // check if file was read successfully
-  if (!ReadFile(m_hFile, m_pBuffer.get(), m_fileSize, &m_bufferSize, 0) && m_bufferSize != m_fileSize) {
+  if (!ReadFile(m_hFile, m_pBuffer.get(), m_fileSize, &m_bufferSize, 0) &&
+      m_bufferSize != m_fileSize) {
     lastError = GetLastError();
-    std::cout << "ERROR: opened but failed to read the file. Error code: "
-              << lastError << "\n";
+    LOG("ERROR: opened but failed to read the file. Error code: " << lastError);
     exit(lastError);
   };
 
   CloseHandle(m_hFile);
 
   // basic format checking
-  if (m_flags) {
-    if (util::checkFlag(m_flags, (uint8_t)bufType::exec - 1)) {
-      // Mark Zbikowski and minimum possible PE size check
-      if (m_pBuffer[0] != 'M' && m_pBuffer[1] != 'Z' || m_bufferSize < 97) {
-        std::cout << "ERROR: this does not seem to be a Windows executable.\n";
-        exit(404);
-      } else {
-        m_type = bufType::exec;
+  {
+    PWORD pSOF = (PWORD)m_pBuffer.get();  // check for MZ
+    if (*pSOF == IMAGE_DOS_SIGNATURE) {
+      m_type = bufferType::exec;
+    } else {
+      // check for 00 01 00 00
+      PDWORD pIconSOF = (PDWORD)m_pBuffer.get();
+      if (*pIconSOF == 0x00010000) {
+        m_type = bufferType::icon;
       }
     }
-    if (util::checkFlag(m_flags, (uint8_t)bufType::icon - 1)) {
-      std::cout << "check if icon\n";
-      m_type = bufType::icon;
+
+    if (m_type == bufferType::none) {
+      LOG("WARNING: couldn't determine buffer type, doesn't seem to be an executable or an icon.");
     }
   }
 
-  std::cout << "Successfuly read '" <<
+  LOG("\nSuccessfuly read '" <<
                    std::string(m_filePath.begin(), m_filePath.end()) <<
-                   "', size: " << (uint32_t)m_bufferSize << " bytes.\n";
+                   "', size: " << (uint32_t)m_bufferSize << " bytes.");
 }
 
 void CFileWorks::getBuffer(BYTE* out_pBuffer, DWORD& out_bufferSize) noexcept {
@@ -72,4 +73,4 @@ BYTE* CFileWorks::getBuffer() noexcept { return m_pBuffer.get(); }
 
 DWORD CFileWorks::getBufferSize() noexcept { return m_bufferSize; }
 
-bufType CFileWorks::getBufferType() noexcept { return m_type; }
+bufferType CFileWorks::getBufferType() noexcept { return m_type; }

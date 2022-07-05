@@ -13,12 +13,12 @@ void processArgs(int argc, wchar_t* argv[]) {
 	argList.emplace_back(argv[i]);
   }
 
-  CFileWorks fExec(argList[0], CHECK_IF_EXE);
+  CFileWorks fExec(argList[0]);
   CBufferProc bExec(&fExec);
   bExec.parseExecHeader();
   bExec.parseImportDesc();
   bExec.showParsedData();
-  //CFileWorks fIcon(argList[2], CHECK_IF_ICO);
+  CFileWorks fIcon(argList[2]);
 };
 
 int wmain(int argc, wchar_t* argv[]) {
@@ -30,7 +30,7 @@ int wmain(int argc, wchar_t* argv[]) {
 	processArgs(argc, argv);
   }
 
-  std::cout << "\nAll done. Press ENTER to exit...\n";
+  LOG("\nAll done. Press ENTER to exit...");
   std::cin.get();
   return 0;
 }

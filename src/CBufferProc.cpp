@@ -25,10 +25,10 @@ void CBufferProc::attach(CFileWorks* pFW) noexcept {
   m_type = m_pFW->getBufferType();
 }
 
-void CBufferProc::setType(bufType type) { m_type = type; }
+void CBufferProc::setType(bufferType type) { m_type = type; }
 
 void CBufferProc::parseExecHeader() noexcept {
-  if (m_type == bufType::exec) {
+  if (m_type == bufferType::exec) {
 
     m_pIDH = (PIMAGE_DOS_HEADER)m_pBuffer;
 
@@ -55,31 +55,23 @@ void CBufferProc::parseExecHeader() noexcept {
 
           // step through descriptors and get libraries until there are none
           
-          while (pIID->Name != NULL) {
+          while (pIID->Characteristics != NULL) {
             LPSTR pLibName =
                 (PCHAR)m_pIDH + util::RVAToOffset(m_pINH, pIID->Name);
             m_usedLibs.emplace_back(pLibName);
             pIID++;
           }
 
-          /*
-          WORD index = 0;
-          while (pIID[index].Characteristics != 0) {
-            LPSTR pLibName = (PCHAR)m_pIDH + util::RVAToOffset(m_pINH, pIID[index].Name);
-            m_usedLibs.emplace_back(pLibName);
-            index++;
-          }*/
           return;
         } else {
-          std::cout
-              << "ERROR: Import table does not exist in the executable file.\n";
+          LOG("ERROR: Import table does not exist in the executable file.");
           return;
         }
       };
     }
   }
 
-  std::cout << "WARNING: correct header data not found. Buffer is not of an executable type?\n";
+  LOG("WARNING: correct header data not found. Buffer is not of an executable type?");
   return;
 }
 
@@ -110,9 +102,9 @@ void CBufferProc::parseImportDesc() noexcept {
 }
 
 void CBufferProc::showParsedData() noexcept {
-  if (m_type == bufType::exec && !m_usedLibs.empty()) {
+  if (m_type == bufferType::exec && !m_usedLibs.empty()) {
     uint16_t index = 0, wNamed = 0;
-    std::cout << "\nLibraries used:\n\n";
+    LOG("\nLibraries used:\n");
     for (const auto& it : m_usedLibs) {
       std::cout << index << ".\t" << it.c_str() << "\n";
       if (it.find('W') != std::string::npos ||
@@ -122,10 +114,10 @@ void CBufferProc::showParsedData() noexcept {
       index++;
     }
 
-    std::cout << "\nPossible WinAPI libraries found: " << wNamed << "\n";
+    LOG("\nPossible WinAPI libraries found: " << wNamed);
 
     index = 0;
-    std::cout << "\nFunctions used:\n\n";
+    LOG("\nFunctions used:\n");
 
     for (const auto& it : m_usedFuncs) {
       std::cout << index << ".\t" << it.c_str() << "\n";
