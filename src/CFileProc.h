@@ -31,7 +31,6 @@ public:
   DWORD getBufferOffset() noexcept;
 
   const wchar_t* getFilePath() const noexcept;
-  std::string getFilePathStr() const noexcept;
 
   const float& calcEntropy() noexcept;
   const float& getEntropy() noexcept;

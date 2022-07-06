@@ -10,7 +10,7 @@ int wmain(int argc, wchar_t* argv[]) {
   LOG("T.able I.con E.ntropy\n");
 
   if (argc < 2 || argc > 7) {
-    util::printHelp();
+    printHelp();
   }
   else {
 	processArgs(argc, argv);

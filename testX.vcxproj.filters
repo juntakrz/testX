@@ -24,9 +24,6 @@
     <ClCompile Include="src\CFileProc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\CBufferProc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

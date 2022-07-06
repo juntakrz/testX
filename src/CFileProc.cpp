@@ -21,7 +21,6 @@ void CFileProc::openFile(const std::wstring& path) noexcept {
   // check if file exists
   if (lastError = GetLastError() == ERROR_FILE_NOT_FOUND) {
     LOG("ERROR: could not find the file specified.");
-    util::printHelp();
     exit(ERROR_FILE_NOT_FOUND);
   }
 
@@ -122,10 +121,6 @@ DWORD CFileProc::getBufferOffset() noexcept { return m_offset; }
 
 const wchar_t* CFileProc::getFilePath() const noexcept {
   return m_filePath.c_str();
-}
-
-std::string CFileProc::getFilePathStr() const noexcept {
-  return std::string(m_filePath.begin(), m_filePath.end());
 }
 
 const float& CFileProc::calcEntropy() noexcept {

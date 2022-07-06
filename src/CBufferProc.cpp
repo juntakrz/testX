@@ -114,7 +114,7 @@ void CBufferProc::injectIcon(CFileProc* pFPIcon,
 
   if (pFPIcon) {
  
-    LOG("ERROR: file '" << pFPIcon->getFilePathStr()
+    wLOG("ERROR: file '" << pFPIcon->getFilePath()
                       << "' doesn't seem to be an icon and won't be injected.");
     if (outputFile != L"") {
       wLOG("Because of this '" << outputFile << "' will not be created.");

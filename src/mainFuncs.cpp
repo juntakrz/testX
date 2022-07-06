@@ -3,6 +3,18 @@
 #include "CBufferProc.h"
 #include "mainFuncs.h"
 
+void printHelp() noexcept {
+  LOG("USAGE: tie [path_to_executable]");
+  LOG("Arguments:\n  -i [path_to_icon]\t.ico file to replace original icon "
+      "with");
+  LOG("  -o [output_filename]\toutput .exe file, will write to the same "
+      "executable if not defined");
+  LOG("  -s\t\t\tshort report");
+  LOG("\nEXAMPLE: tie test.exe -o test_copy.exe -i icon1.ico");
+
+  exit(0);
+}
+
 void processArgs(int argc, wchar_t* argv[]) {
 
   std::vector<std::wstring> argList;
@@ -126,11 +138,11 @@ void presentResults(CBufferProc* execBuffer, CFileProc* iconFile,
                                  << ", of these " << wNamed << " contain 'w'.\n");
   }
 
-  LOG("Entropy for '" << execBuffer->getSource()->getFilePathStr()
+  wLOG("Entropy for '" << execBuffer->getSource()->getFilePath()
                         << "': " << execBuffer->getSource()->getEntropy());
 
   if (iconFile) {
-    LOG("Entropy for '" << iconFile->getFilePathStr()
+    wLOG("Entropy for '" << iconFile->getFilePath()
                           << "': " << iconFile->getEntropy());
   }
 
