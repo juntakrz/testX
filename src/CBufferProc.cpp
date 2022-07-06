@@ -53,11 +53,41 @@ void CBufferProc::parseExecHeader() noexcept {
             pImportDesc++;
           }
 
-          return;
+          //return;
         } else {
           LOG("ERROR: Import table does not exist in the executable file.");
-          return;
+          //return;
         }
+
+        pDataDir = &m_pNTHdr->OptionalHeader
+                        .DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE];
+
+        if (pDataDir->Size > 0) {
+          PIMAGE_RESOURCE_DIRECTORY pResDir = PIMAGE_RESOURCE_DIRECTORY(
+                  (PBYTE)m_pDOSHdr +
+                  util::RVAToOffset(m_pNTHdr, pDataDir->VirtualAddress));
+
+          DWORD numEntries =
+              pResDir->NumberOfNamedEntries + pResDir->NumberOfIdEntries;
+
+          PIMAGE_RESOURCE_DIRECTORY_ENTRY pResDE =
+              PIMAGE_RESOURCE_DIRECTORY_ENTRY(pResDir + 1);
+
+          for (DWORD i = 0; i < numEntries; i++) {
+            if (pResDE->DataIsDirectory == 1) {
+              pResDE += pResDE->OffsetToDirectory;
+            } else {
+              break;
+            }
+          }
+
+          PIMAGE_RESOURCE_DATA_ENTRY pRDE = PIMAGE_RESOURCE_DATA_ENTRY(pResDE + pResDE->OffsetToData);
+          
+          int id = LookupIconIdFromDirectoryEx((PBYTE)pResDE, true, 0, 0,
+                                               LR_DEFAULTCOLOR);
+          std::string x;
+        }
+
       };
     }
   }
