@@ -4,9 +4,10 @@
 #include "mainFuncs.h"
 
 void processArgs(int argc, wchar_t* argv[]) {
+
   std::vector<std::wstring> argList;
   std::wstring iconPath = L"", outputPath = L"";
-  CFileProc* pIconFile = nullptr;
+  CFileProc fIcon;
   bool isDetailed = true;
 
   for (int i = 1; i < argc; i++) {
@@ -35,15 +36,14 @@ void processArgs(int argc, wchar_t* argv[]) {
   fExec.calcEntropy();
 
   if (iconPath != L"") {
-    CFileProc fIcon(iconPath);
+    fIcon.openFile(iconPath);
     fIcon.calcEntropy();
     bExec.injectIcon(&fIcon, outputPath.c_str());
-    pIconFile = &fIcon;
   }
 
   bExec.parseExecHeader();
   
-  presentResults(&bExec, pIconFile, isDetailed);
+  presentResults(&bExec, &fIcon, isDetailed);
 };
 
 void presentResults(CBufferProc* execBuffer, CFileProc* iconFile,
@@ -54,7 +54,7 @@ void presentResults(CBufferProc* execBuffer, CFileProc* iconFile,
 
   // library index, winapi functions num, total functions num, winapi libraries
   // num, functions containing "w" num
-  uint32_t index = 0, wCount = 0, totalCount = 0, wLibCount = 0, wNamed = 0;
+  size_t index = 0, wCount = 0, totalCount = 0, wLibCount = 0, wNamed = 0;
   bool query = false, findResult = false;
 
   // WinAPI function detection, returns true if GetProcAddress isn't null
@@ -98,7 +98,8 @@ void presentResults(CBufferProc* execBuffer, CFileProc* iconFile,
       // requires -d command line argument
       (isDetailed) ? LOG("\t   \\") : std::cout;
 
-      findResult = (execBuffer->funcs().find(it_lib) != execBuffer->funcs().end());
+      findResult =
+          (execBuffer->funcs().find(it_lib) != execBuffer->funcs().end());
 
       if (!execBuffer->funcs().empty() && findResult) {
         for (const auto it_func : execBuffer->funcs().at(it_lib)) {
@@ -115,12 +116,22 @@ void presentResults(CBufferProc* execBuffer, CFileProc* iconFile,
     }
 
     (isDetailed) ? LOG("\n* - WinAPI method.") : std::cout;
+  }
     LOG("\nREPORT:\n");
+
+  if (!execBuffer->libs().empty()) {
     LOG("WinAPI libraries found: " << wLibCount << " out of "
                                    << execBuffer->libs().size() << ".");
     LOG("WinAPI methods found: " << wCount << " out of " << totalCount
-                                 << ", of these " << wNamed << " contain 'w'.");
-    LOG("\nEntropy for '" << execBuffer->getSource()->getFilePathStr()
-                          << "': " << execBuffer->getSource()->getEntropy());
+                                 << ", of these " << wNamed << " contain 'w'.\n");
   }
+
+  LOG("Entropy for '" << execBuffer->getSource()->getFilePathStr()
+                        << "': " << execBuffer->getSource()->getEntropy());
+
+  if (iconFile) {
+    LOG("Entropy for '" << iconFile->getFilePathStr()
+                          << "': " << iconFile->getEntropy());
+  }
+
 }

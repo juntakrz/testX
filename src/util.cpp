@@ -4,11 +4,13 @@
 
 namespace util {
 void printHelp() noexcept {
-  LOG("USAGE: testX [path_to_executable]");
-  LOG("Flags:\n  -i [path_to_icon]\t.ico file to replace original icon with");
+  LOG("USAGE: tie [path_to_executable]");
+  LOG("Arguments:\n  -i [path_to_icon]\t.ico file to replace original icon with");
   LOG("  -o [output_filename]\toutput .exe file, will write to the same executable if not defined");
   LOG("  -s\t\t\tshort report");
-  LOG("\nEXAMPLE: testX test.exe -o test_copy.exe -i icon1.ico");
+  LOG("\nEXAMPLE: tie test.exe -o test_copy.exe -i icon1.ico");
+
+  exit(0);
 }
 
 DWORD RVAToOffset(PIMAGE_NT_HEADERS pNTHdr, DWORD RVA) noexcept {
@@ -37,7 +39,7 @@ float calcShannonEntropy(PBYTE pBuffer, DWORD bufferSize) noexcept {
   uint32_t pData[256] = {0};
 
   for (DWORD i = 0; i < bufferSize; i++) {
-    (*pBuffer > 0) ? pData[255 / *pBuffer]++ : pData[0]++;
+    pData[*pBuffer]++;
     pBuffer++;
   }
 

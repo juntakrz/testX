@@ -1,9 +1,8 @@
 #include "pch.h"
 #include "CFileProc.h"
 
-CFileProc::CFileProc(const std::wstring& path) noexcept
-    : m_filePath(path) {
-  CFileProc::openFile(m_filePath);
+CFileProc::CFileProc(const std::wstring& path) noexcept {
+  CFileProc::openFile(path);
 }
 
 CFileProc::~CFileProc() noexcept {
@@ -14,6 +13,7 @@ CFileProc::~CFileProc() noexcept {
 
 void CFileProc::openFile(const std::wstring& path) noexcept {
   DWORD lastError = 0;
+  m_filePath = path;
 
   m_hFile = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0,
                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -87,12 +87,10 @@ void CFileProc::openFile(const std::wstring& path) noexcept {
     }
   }
 
-  LOG("Successfuly read '" <<
-                   std::string(m_filePath.begin(), m_filePath.end()) <<
-                   "', size: " << (uint32_t)m_bufferSize << " bytes.");
+  wLOG("Successfuly read '" << m_filePath << "', size: " << m_bufferSize << " bytes.");
 }
 
-DWORD CFileProc::saveFile(const std::wstring& path) noexcept {
+void CFileProc::saveFile(const std::wstring& path) noexcept {
   
   DWORD bytesOut = 0;
 
@@ -106,7 +104,7 @@ DWORD CFileProc::saveFile(const std::wstring& path) noexcept {
 
   CloseHandle(hFile);
 
-  wLOG(L"Created file at " << path << ", " << bytesOut << " bytes written.");
+  wLOG(L"Created file '" << path << "', " << bytesOut << " bytes written.");
 }
 
 void CFileProc::getBuffer(BYTE* out_pBuffer, DWORD& out_bufferSize) noexcept {

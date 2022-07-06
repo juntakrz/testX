@@ -15,13 +15,14 @@ class CFileProc {
   bufferType m_type = bufferType::none;
 
 public:
+  CFileProc() noexcept {};
   CFileProc(const std::wstring& path) noexcept;
  ~CFileProc() noexcept;
   CFileProc(const CFileProc&) = delete;
   CFileProc operator=(const CFileProc&) = delete;
 
   void openFile(const std::wstring& path) noexcept;
-  DWORD saveFile(const std::wstring& path) noexcept;
+  void saveFile(const std::wstring& path) noexcept;
 
   void getBuffer(BYTE* out_pBuffer, DWORD& out_bufferSize) noexcept;
   BYTE* getBuffer() noexcept;

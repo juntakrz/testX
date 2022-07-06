@@ -66,40 +66,57 @@ void CBufferProc::parseExecHeader() noexcept {
   return;
 }
 
-void CBufferProc::injectIcon(CFileProc* pFPIcon, const wchar_t* outputFile) noexcept {
- 
-  PBYTE pIcon = pFPIcon->getBuffer();
-  DWORD iconSize = pFPIcon->getBufferSize();
-  std::wstring outputPath = (outputFile != L"") ? outputFile : m_pFP->getFilePath();
+void CBufferProc::injectIcon(CFileProc* pFPIcon,
+                             const wchar_t* outputFile) noexcept {
+  if (pFPIcon && pFPIcon->getBufferType() == bufferType::icon) {
+    PBYTE pIcon = pFPIcon->getBuffer();
+    DWORD iconSize = pFPIcon->getBufferSize();
+    std::wstring outputPath =
+        (outputFile != L"") ? outputFile : m_pFP->getFilePath();
 
-  wLOG(L"\nInjecting icon: " << pFPIcon->getFilePath() << L"\n\t-> into: " << outputPath);
+    wLOG(L"\nInjecting icon: " << pFPIcon->getFilePath() << L"\n\t-> into: "
+                               << outputPath);
 
-  // create new file if -o commandline argument is used
-  if (outputFile != L"") {
-      
-    m_pFP->saveFile(outputPath);
+    // create new file if -o commandline argument is used
+    if (outputFile != L"") {
+      m_pFP->saveFile(outputPath);
+    }
+
+    HANDLE hTgtFile = BeginUpdateResourceW(outputPath.c_str(), FALSE);
+
+    GROUPICON_T gIcon;
+    gIcon.imageCount = 1;
+    gIcon.resType = 1;
+
+    // force default icon group to have only one icon with id 1
+    UpdateResourceW(hTgtFile, RT_GROUP_ICON, MAKEINTRESOURCEW(1),
+                    MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &gIcon,
+                    sizeof(GROUPICON_T));
+
+    UpdateResourceW(hTgtFile, RT_GROUP_ICON, L"MAINICON",
+                    MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &gIcon,
+                    sizeof(GROUPICON_T));
+
+    // inject icon with id 1 using correct data offset
+    UpdateResourceW(hTgtFile, RT_ICON, MAKEINTRESOURCEW(1),
+                    MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
+                    pIcon + pFPIcon->getBufferOffset(),
+                    iconSize - pFPIcon->getBufferOffset());
+
+    LOG("Applied icon data offset of "
+        << pFPIcon->getBufferOffset() << " bytes and injected "
+        << iconSize - pFPIcon->getBufferOffset() << " bytes.");
+
+    EndUpdateResourceW(hTgtFile, FALSE);
+
+    return;
   }
 
-  HANDLE hTgtFile = BeginUpdateResourceW(outputPath.c_str(), FALSE);
-
-  GROUPICON_T gIcon;
-  gIcon.imageCount = 1;
-  gIcon.resType = 1;
-
-  // force default icon group to have only one icon with id 1
-  UpdateResourceW(hTgtFile, RT_GROUP_ICON, MAKEINTRESOURCEW(1),
-                  MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &gIcon,
-                  sizeof(GROUPICON_T));
-
-  // inject icon with id 1 using correct data offset
-  UpdateResourceW(hTgtFile, RT_ICON, MAKEINTRESOURCEW(1), MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
-                  pIcon + pFPIcon->getBufferOffset(),
-                  iconSize - pFPIcon->getBufferOffset());
-
-  LOG("Applied icon data offset of " << pFPIcon->getBufferOffset() << " bytes and injected "
-      << iconSize - pFPIcon->getBufferOffset() << " bytes.");
-
-  EndUpdateResourceW(hTgtFile, FALSE);
+  LOG("ERROR: file '" << pFPIcon->getFilePathStr()
+                      << "' doesn't seem to be an icon and won't be injected.");
+  if (outputFile != L"") {
+    wLOG("Because of this '" << outputFile << "' will not be created.");
+  }
 }
 
 void CBufferProc::parseImportDesc(PIMAGE_IMPORT_DESCRIPTOR pImportDesc, std::string libName) noexcept {
