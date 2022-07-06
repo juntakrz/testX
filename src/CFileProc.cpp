@@ -129,3 +129,12 @@ const wchar_t* CFileProc::getFilePath() const noexcept {
 std::string CFileProc::getFilePathStr() const noexcept {
   return std::string(m_filePath.begin(), m_filePath.end());
 }
+
+const float& CFileProc::calcEntropy() noexcept {
+  m_entropy = util::calcShannonEntropy(m_pBuffer.get(), m_bufferSize);
+  return m_entropy;
+}
+
+const float& CFileProc::getEntropy() noexcept {
+  return (m_entropy < 0) ? calcEntropy() : m_entropy;
+}

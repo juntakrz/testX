@@ -10,6 +10,7 @@ class CFileProc {
   DWORD m_fileSize = 0;
   DWORD m_bufferSize = 0;
   DWORD m_offset = 0;
+  float m_entropy = -1.0f;			// -1.0 if entropy wasn't calculated yet
   std::unique_ptr<BYTE[]> m_pBuffer;
   bufferType m_type = bufferType::none;
 
@@ -21,11 +22,16 @@ public:
 
   void openFile(const std::wstring& path) noexcept;
   DWORD saveFile(const std::wstring& path) noexcept;
+
   void getBuffer(BYTE* out_pBuffer, DWORD& out_bufferSize) noexcept;
   BYTE* getBuffer() noexcept;
   DWORD getBufferSize() noexcept;
   bufferType getBufferType() noexcept;
   DWORD getBufferOffset() noexcept;
+
   const wchar_t* getFilePath() const noexcept;
   std::string getFilePathStr() const noexcept;
+
+  const float& calcEntropy() noexcept;
+  const float& getEntropy() noexcept;
 };

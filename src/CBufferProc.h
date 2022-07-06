@@ -19,17 +19,15 @@ class CBufferProc {
                        std::string libName = "") noexcept;
 
  public:
-  CBufferProc(BYTE* pBuffer, DWORD size) noexcept;
   CBufferProc(CFileProc* pFP) noexcept;
   ~CBufferProc(){};
 
-  void attach(BYTE* pBuffer, DWORD size) noexcept;
-  void attach(CFileProc* pFW) noexcept;
-
-  void setType(bufferType type);
+  void attach(CFileProc* pFP) noexcept;
 
   void parseExecHeader() noexcept;
-  void injectIcon(CFileProc* pFP, const wchar_t* outputFile = L"") noexcept;
+  void injectIcon(CFileProc* pFPIcon, const wchar_t* outputFile = L"") noexcept;
 
-  void showParsedData(bool isDetailed = true) noexcept;
+  CFileProc* getSource() noexcept;
+  const std::vector<std::string>& libs() noexcept;
+  const std::map<std::string, std::vector<std::string>>& funcs() noexcept;
 };

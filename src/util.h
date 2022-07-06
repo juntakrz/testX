@@ -9,4 +9,6 @@ bool checkFlag(T flags, uint8_t bitPos) noexcept {
 }
 
 DWORD RVAToOffset(PIMAGE_NT_HEADERS pNTHdr, DWORD RVA) noexcept;
+
+float calcShannonEntropy(PBYTE pBuffer, DWORD bufferSize) noexcept;
 }

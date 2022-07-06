@@ -2,9 +2,6 @@
 #include "CFileProc.h"
 #include "CBufferProc.h"
 
-CBufferProc::CBufferProc(BYTE* pBuffer, DWORD size) noexcept
-    : m_pBuffer(pBuffer), m_bufferSize(size) {}
-
 CBufferProc::CBufferProc(CFileProc* pFP) noexcept
     : m_pFP(pFP),
       m_pBuffer(m_pFP->getBuffer()),
@@ -13,19 +10,12 @@ CBufferProc::CBufferProc(CFileProc* pFP) noexcept
   //
 }
 
-void CBufferProc::attach(BYTE* pBuffer, DWORD size) noexcept {
-  m_pBuffer = pBuffer;
-  m_bufferSize = size;
-}
-
 void CBufferProc::attach(CFileProc* pFP) noexcept {
   m_pFP = pFP;
   m_pBuffer = m_pFP->getBuffer();
   m_bufferSize = m_pFP->getBufferSize();
   m_type = m_pFP->getBufferType();
 }
-
-void CBufferProc::setType(bufferType type) { m_type = type; }
 
 void CBufferProc::parseExecHeader() noexcept {
   if (m_type == bufferType::exec) {
@@ -76,13 +66,13 @@ void CBufferProc::parseExecHeader() noexcept {
   return;
 }
 
-void CBufferProc::injectIcon(CFileProc* pFP, const wchar_t* outputFile) noexcept {
+void CBufferProc::injectIcon(CFileProc* pFPIcon, const wchar_t* outputFile) noexcept {
  
-  PBYTE pIcon = pFP->getBuffer();
-  DWORD iconSize = pFP->getBufferSize();
+  PBYTE pIcon = pFPIcon->getBuffer();
+  DWORD iconSize = pFPIcon->getBufferSize();
   std::wstring outputPath = (outputFile != L"") ? outputFile : m_pFP->getFilePath();
 
-  wLOG(L"\nInjecting icon: " << pFP->getFilePath() << L"\n\t-> into: " << outputPath);
+  wLOG(L"\nInjecting icon: " << pFPIcon->getFilePath() << L"\n\t-> into: " << outputPath);
 
   // create new file if -o commandline argument is used
   if (outputFile != L"") {
@@ -103,11 +93,11 @@ void CBufferProc::injectIcon(CFileProc* pFP, const wchar_t* outputFile) noexcept
 
   // inject icon with id 1 using correct data offset
   UpdateResourceW(hTgtFile, RT_ICON, MAKEINTRESOURCEW(1), MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
-                  pIcon + pFP->getBufferOffset(),
-                  iconSize - pFP->getBufferOffset());
+                  pIcon + pFPIcon->getBufferOffset(),
+                  iconSize - pFPIcon->getBufferOffset());
 
-  LOG("Applied icon data offset of " << pFP->getBufferOffset() << " bytes and injected "
-      << iconSize - pFP->getBufferOffset() << " bytes.");
+  LOG("Applied icon data offset of " << pFPIcon->getBufferOffset() << " bytes and injected "
+      << iconSize - pFPIcon->getBufferOffset() << " bytes.");
 
   EndUpdateResourceW(hTgtFile, FALSE);
 }
@@ -148,74 +138,12 @@ void CBufferProc::parseImportDesc(PIMAGE_IMPORT_DESCRIPTOR pImportDesc, std::str
   }
 }
 
-void CBufferProc::showParsedData(bool isDetailed) noexcept {
+CFileProc* CBufferProc::getSource() noexcept { return m_pFP; }
 
-  HMODULE hLib = nullptr;
-  std::string loadedLibName = "";
+const std::vector<std::string>& CBufferProc::libs() noexcept {
+  return m_usedLibs;
+}
 
-  // library index, winapi functions num, total functions num, winapi libraries num, functions containing "w" num
-  uint32_t index = 0, wCount = 0, totalCount = 0, wLibCount = 0, wNamed = 0;
-  bool query = false, findResult = false;
-
-  // WinAPI function tester
-  auto isWinAPI = [&](const std::string& libName, const std::string& funcName) {
-
-    if (libName != loadedLibName) {
-      hLib = LoadLibraryA(libName.c_str());
-
-      if (hLib) {
-        wLibCount++;
-      }
-    }
-
-    if (hLib && GetProcAddress(hLib, funcName.c_str())) {
-      loadedLibName = libName;
-
-      // detect if any function has W in its name
-      if (funcName.find('W') != std::string::npos ||
-          funcName.find('w') != std::string::npos) {
-        wNamed++;
-      }
-
-      wCount++;
-      return true;
-    }
-
-    return false;
-  };
-
-  if (m_type == bufferType::exec && !m_usedLibs.empty()) {
-
-    LOG("\nLibraries in the import table:\n");
-
-    // show every imported library found
-    for (const auto& it_lib : m_usedLibs) {
-      LOG(index << ".\t" << it_lib);
-
-      // show every imported function found per library
-      // requires -d command line argument
-      (isDetailed) ? LOG("\t   \\") : std::cout;
-
-      findResult = (m_foundFuncs.find(it_lib) != m_foundFuncs.end());
-
-      if (!m_foundFuncs.empty() && findResult) {
-        for (const auto it_func : m_foundFuncs.at(it_lib)) {  
-          query = isWinAPI(it_lib, it_func);
-
-          if (isDetailed) {
-            (query) ? LOG("\t*  |= " << it_func) : LOG("\t   |= " << it_func);
-          }
-        }
-      }
-
-      totalCount += (findResult) ? m_foundFuncs.at(it_lib).size() : 0u;
-      index++;
-    }
-
-    (isDetailed) ? LOG("\n* - WinAPI method.") : std::cout;
-    LOG("\nREPORT:\n");
-    LOG("WinAPI libraries found: " << wLibCount << " out of " << m_usedLibs.size() << ".");
-    LOG("WinAPI methods found: " << wCount << " out of " << totalCount
-                                 << ", of these " << wNamed << " contain 'w'.");
-  }
+const std::map<std::string, std::vector<std::string>>& CBufferProc::funcs() noexcept {
+  return m_foundFuncs;
 }
