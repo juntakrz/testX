@@ -68,11 +68,11 @@ void presentResults(CBufferProc* execBuffer, CFileProc* iconFile,
 
       if (hLib) {
         wLibCount++;
+        loadedLibName = libName;
       }
     }
 
     if (hLib && GetProcAddress(hLib, funcName.c_str())) {
-      loadedLibName = libName;
 
       // detect if any function has W in its name
       if (funcName.find('W') != std::string::npos ||
@@ -120,9 +120,9 @@ void presentResults(CBufferProc* execBuffer, CFileProc* iconFile,
     LOG("\nREPORT:\n");
 
   if (!execBuffer->libs().empty()) {
-    LOG("WinAPI libraries found: " << wLibCount << " out of "
+    LOG("WinAPI libraries detected: " << wLibCount << " out of "
                                    << execBuffer->libs().size() << ".");
-    LOG("WinAPI methods found: " << wCount << " out of " << totalCount
+    LOG("WinAPI methods detected: " << wCount << " out of " << totalCount
                                  << ", of these " << wNamed << " contain 'w'.\n");
   }
 

@@ -112,10 +112,13 @@ void CBufferProc::injectIcon(CFileProc* pFPIcon,
     return;
   }
 
-  LOG("ERROR: file '" << pFPIcon->getFilePathStr()
+  if (pFPIcon) {
+ 
+    LOG("ERROR: file '" << pFPIcon->getFilePathStr()
                       << "' doesn't seem to be an icon and won't be injected.");
-  if (outputFile != L"") {
-    wLOG("Because of this '" << outputFile << "' will not be created.");
+    if (outputFile != L"") {
+      wLOG("Because of this '" << outputFile << "' will not be created.");
+    }
   }
 }
 
@@ -143,7 +146,13 @@ void CBufferProc::parseImportDesc(PIMAGE_IMPORT_DESCRIPTOR pImportDesc, std::str
                                     util::RVAToOffset(
                                         pNTHdr, pThunkILT->u1.AddressOfData));
         collectedFuncs.emplace_back(pIBName->Name);
+      } else if (IMAGE_ORDINAL(pThunkILT->u1.Ordinal)) {
+      
+        std::ostringstream sstr;
+        sstr << "<Ordinal> " << (pThunkILT->u1.Function & 0xffff);
+        collectedFuncs.emplace_back(sstr.str());
       }
+
       pThunkILT++;
     }
 
