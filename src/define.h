@@ -9,19 +9,20 @@ enum bufferType { none = 0, exec, icon };
 
 #pragma pack(push, 2)
 struct ICON_T {
-  BYTE width;
-  BYTE height;
-  BYTE colors;
+  BYTE width = 0;
+  BYTE height = 0;
+  BYTE colorCount = 0;
   BYTE reserved = 0;
-  WORD planes;
-  WORD bpp;
-  DWORD size;
-  WORD resId;
+  WORD planes = 1;
+  WORD bpp = 0;
+  DWORD bytesInRes = 0;
+  WORD id = 1;
 };
 
 struct GROUPICON_T {
   WORD reserved = 0;
   WORD resType;
   WORD imageCount;
+  ICON_T icons;
 };
 #pragma pack(pop)

@@ -47,13 +47,13 @@ void processArgs(int argc, wchar_t* argv[]) {
   CBufferProc bExec(&fExec);
   fExec.calcEntropy();
 
+   bExec.parseExecHeader();
+
   if (iconPath != L"") {
     fIcon.openFile(iconPath);
     fIcon.calcEntropy();
     bExec.injectIcon(&fIcon, outputPath.c_str());
   }
-
-  bExec.parseExecHeader();
   
   presentResults(&bExec, &fIcon, isDetailed);
 };

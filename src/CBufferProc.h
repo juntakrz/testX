@@ -6,6 +6,7 @@ class CBufferProc {
   BYTE* m_pBuffer = nullptr;
   DWORD m_bufferSize = 0;
   bufferType m_type = bufferType::none;
+  DWORD m_defaultIconGroupId = 0;
 
   PIMAGE_DOS_HEADER m_pDOSHdr = nullptr;
   PIMAGE_NT_HEADERS m_pNTHdr = nullptr;

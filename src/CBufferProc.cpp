@@ -19,7 +19,10 @@ void CBufferProc::attach(CFileProc* pFP) noexcept {
 
 void CBufferProc::parseExecHeader() noexcept {
   if (m_type == bufferType::exec) {
-
+    
+    /*
+    *  IMPORT LOOKUP TABLE RETRIEVAL
+    */
     m_pDOSHdr = (PIMAGE_DOS_HEADER)m_pBuffer;
 
     // "MZ" test for little endian x86 CPUs
@@ -52,12 +55,47 @@ void CBufferProc::parseExecHeader() noexcept {
             parseImportDesc(pImportDesc, pLibName);
             pImportDesc++;
           }
-
-          return;
         } else {
           LOG("ERROR: Import table does not exist in the executable file.");
-          return;
         }
+
+        /*
+         *  DEFAULT ICON GROUP RETRIEVAL
+         */
+        pDataDir = &m_pNTHdr->OptionalHeader
+                        .DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE];
+
+        if (pDataDir->Size > 0) {
+          PIMAGE_RESOURCE_DIRECTORY pResDir = PIMAGE_RESOURCE_DIRECTORY(
+              (PBYTE)m_pDOSHdr +
+              util::RVAToOffset(m_pNTHdr, pDataDir->VirtualAddress));
+
+          DWORD nTotal =
+              pResDir->NumberOfNamedEntries + pResDir->NumberOfIdEntries;
+
+          PBYTE pResBase = (PBYTE)pResDir;
+
+          PIMAGE_RESOURCE_DIRECTORY_ENTRY pResDirEntry =
+              PIMAGE_RESOURCE_DIRECTORY_ENTRY(pResDir + 1);
+          
+          for (uint8_t i = 0; i < nTotal; i++) {
+            pResDirEntry = PIMAGE_RESOURCE_DIRECTORY_ENTRY((PBYTE)pResDirEntry + 8);
+     
+            // name / id 14 = RT_GROUP_ICON
+            if (pResDirEntry->Name == 14) {
+              pResDir = PIMAGE_RESOURCE_DIRECTORY(
+                  pResBase + pResDirEntry->OffsetToDirectory);
+
+              pResDirEntry =
+                  PIMAGE_RESOURCE_DIRECTORY_ENTRY((PBYTE)pResDir + 16);
+              
+              m_defaultIconGroupId = pResDirEntry->Id;
+              return;
+            }
+          }
+        }
+
+        return;
       };
     }
   }
@@ -84,24 +122,43 @@ void CBufferProc::injectIcon(CFileProc* pFPIcon,
 
     HANDLE hTgtFile = BeginUpdateResourceW(outputPath.c_str(), FALSE);
 
+    ICON_T icon1;
+
     GROUPICON_T gIcon;
     gIcon.imageCount = 1;
     gIcon.resType = 1;
+    gIcon.icons = icon1;
 
     // force default icon group to have only one icon with id 1
-    UpdateResourceW(hTgtFile, RT_GROUP_ICON, MAKEINTRESOURCEW(1),
-                    MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &gIcon,
-                    sizeof(GROUPICON_T));
+    if (m_defaultIconGroupId) {
+      UpdateResourceW(hTgtFile, RT_GROUP_ICON, MAKEINTRESOURCEW(m_defaultIconGroupId),
+                      MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &gIcon,
+                      sizeof(GROUPICON_T));
 
-    UpdateResourceW(hTgtFile, RT_GROUP_ICON, L"MAINICON",
-                    MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &gIcon,
-                    sizeof(GROUPICON_T));
+    } else {
+      UpdateResourceW(hTgtFile, RT_GROUP_ICON, MAKEINTRESOURCEW(1),
+                      MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &gIcon,
+                      sizeof(GROUPICON_T));
 
+      UpdateResourceW(hTgtFile, RT_GROUP_ICON, L"MAINICON",
+                      MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), &gIcon,
+                      sizeof(GROUPICON_T));
+    }
     // inject icon with id 1 using correct data offset
     UpdateResourceW(hTgtFile, RT_ICON, MAKEINTRESOURCEW(1),
                     MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
                     pIcon + pFPIcon->getBufferOffset(),
                     iconSize - pFPIcon->getBufferOffset());
+    /*
+    UpdateResourceW(hTgtFile, RT_ICON, MAKEINTRESOURCEW(2),
+                    MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
+                    pIcon + pFPIcon->getBufferOffset(),
+                    iconSize - pFPIcon->getBufferOffset());
+
+    UpdateResourceW(hTgtFile, RT_ICON, MAKEINTRESOURCEW(3),
+                    MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
+                    pIcon + pFPIcon->getBufferOffset(),
+                    iconSize - pFPIcon->getBufferOffset());*/
 
     LOG("Applied icon data offset of "
         << pFPIcon->getBufferOffset() << " bytes and injected "
@@ -151,8 +208,7 @@ void CBufferProc::parseImportDesc(PIMAGE_IMPORT_DESCRIPTOR pImportDesc, std::str
         std::ostringstream sstr;
         sstr << "<Ordinal> " << (pThunkILT->u1.Function & 0xffff);
         collectedFuncs.emplace_back(sstr.str());
-      }
-
+      } 
       pThunkILT++;
     }
 
