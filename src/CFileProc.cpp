@@ -119,8 +119,8 @@ bufferType CFileProc::getBufferType() noexcept { return m_type; }
 
 DWORD CFileProc::getBufferOffset() noexcept { return m_offset; }
 
-const wchar_t* CFileProc::getFilePath() const noexcept {
-  return m_filePath.c_str();
+const std::wstring& CFileProc::getFilePath() const noexcept {
+  return m_filePath;
 }
 
 const float& CFileProc::calcEntropy() noexcept {

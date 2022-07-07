@@ -105,7 +105,7 @@ void CBufferProc::parseExecHeader() noexcept {
 }
 
 void CBufferProc::injectIcon(CFileProc* pFPIcon,
-                             const wchar_t* outputFile) noexcept {
+                             const std::wstring& outputFile) noexcept {
   if (pFPIcon && pFPIcon->getBufferType() == bufferType::icon) {
     PBYTE pIcon = pFPIcon->getBuffer();
     DWORD iconSize = pFPIcon->getBufferSize();
@@ -149,16 +149,6 @@ void CBufferProc::injectIcon(CFileProc* pFPIcon,
                     MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
                     pIcon + pFPIcon->getBufferOffset(),
                     iconSize - pFPIcon->getBufferOffset());
-    /*
-    UpdateResourceW(hTgtFile, RT_ICON, MAKEINTRESOURCEW(2),
-                    MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
-                    pIcon + pFPIcon->getBufferOffset(),
-                    iconSize - pFPIcon->getBufferOffset());
-
-    UpdateResourceW(hTgtFile, RT_ICON, MAKEINTRESOURCEW(3),
-                    MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
-                    pIcon + pFPIcon->getBufferOffset(),
-                    iconSize - pFPIcon->getBufferOffset());*/
 
     LOG("Applied icon data offset of "
         << pFPIcon->getBufferOffset() << " bytes and injected "

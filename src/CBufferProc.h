@@ -26,7 +26,7 @@ class CBufferProc {
   void attach(CFileProc* pFP) noexcept;
 
   void parseExecHeader() noexcept;
-  void injectIcon(CFileProc* pFPIcon, const wchar_t* outputFile = L"") noexcept;
+  void injectIcon(CFileProc* pFPIcon, const std::wstring& outputFile = L"") noexcept;
 
   CFileProc* getSource() noexcept;
   const std::vector<std::string>& libs() noexcept;
